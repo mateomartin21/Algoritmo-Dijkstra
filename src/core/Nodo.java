@@ -56,4 +56,22 @@ public class Nodo implements Comparable<Nodo> {
         // Le dice a Java cómo ordenar los nodos: el que tenga menor distancia va primero
         return Double.compare(this.distanciaMinima, otro.getDistanciaMinima());
     }
+
+    public double obtenerCostoHacia(Nodo destinoDeseado) {
+        for (Arista arista : this.adyacentes) {
+            if (arista.getDestino() == destinoDeseado) {
+                return arista.getPeso();
+            }
+        }
+        return 0.0; 
+    }
+
+    public boolean tieneConexionCon(Nodo destinoDeseado) {
+        for (Arista arista : this.adyacentes) {
+            if (arista.getDestino() == destinoDeseado) {
+                return true; // 
+            }
+        }
+        return false; // No están conectados
+    }
 }
