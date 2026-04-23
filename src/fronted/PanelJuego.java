@@ -17,6 +17,9 @@ public class PanelJuego extends JPanel{
     private char letraSiguienteNodo = 'A'; //para que se nombren automaticamente
     private Nodo nodoSeleccionado = null; //para saber que nodo se tocó primero al unir
 
+    private boolean modoEdicion = true;
+    private Nodo nodoJugador = null;
+
     public PanelJuego(Grafos grafo){
         this.grafo = grafo;
         this.setBackground(new Color(30,30,30));
@@ -29,7 +32,8 @@ public class PanelJuego extends JPanel{
             
             // 1. Revisar si el usuario hizo clic sobre un nodo
             Nodo nodoClickeado = obtenerNodoBajoElRaton(mouseX, mouseY);
-            
+           
+            if (modoEdicion) {
             if (nodoClickeado != null){
                 if (nodoSeleccionado == null){
                     nodoSeleccionado = nodoClickeado;
@@ -45,11 +49,28 @@ public class PanelJuego extends JPanel{
             } else{
                 // si hizo clic en el vacio
                 String idNuevo = String.valueOf(letraSiguienteNodo);
-                Nodo nuevoNodo = new Nodo(idNuevo, mouseX, mouseY);
-                PanelJuego.this.grafo.agregarNodo(nuevoNodo);
+                PanelJuego.this.grafo.agregarNodo(new Nodo(idNuevo, mouseX, mouseY));
 
                 letraSiguienteNodo++; //avanza a la siguiente letra del laberinto
                 nodoSeleccionado = null; }
+            } else {
+                if (nodoClickeado != null){
+                    if(nodoJugador == null){
+                        //primer clic el usuario elige donde empezar
+                        nodoJugador = nodoClickeado;
+                        System.out.println("Iniciaste en el nodo: " + nodoJugador.getId());
+                    } else{
+                        if (nodoJugador.tieneConexionCon(nodoClickeado)){
+                            //se cumple la validacion
+                            nodoJugador = nodoClickeado;
+                            System.out.println("Te moviste al nodo: " + nodoJugador.getId());
+                        } else {
+                            //falla la validacion
+                            System.out.println("¡Movimiento invalido! No puedes saltar hasta ahi.");
+                        }
+                    }
+                }
+            }
                 repaint(); //le dije a java que vuelva a dibujar todo el lienzo
         }
         });
@@ -123,10 +144,25 @@ public class PanelJuego extends JPanel{
         g2d.drawString(nodo.getId(), nodo.getX() - 4, nodo.getY() + 4);
 
     }
+    // 3 - dibujar al jugador
+    if (!modoEdicion && nodoJugador != null){
+        g2d.setColor(Color.GREEN); //el jugador es de color verde
+        int radioJugador = 10; //mas chico que el nodo para que entre dentro
+        g2d.fillOval(nodoJugador.getX()- radioJugador, nodoJugador.getY() -radioJugador, radioJugador*2, radioJugador*2);
+    }
    
     
     }
 
+    public void cambiarModo(){
+        this.modoEdicion = !this.modoEdicion;
+        this.nodoSeleccionado = null;
+        repaint();
+    }
+
+    public boolean isModoEdicion() {
+        return this.modoEdicion;
+    }
 
 }
 
