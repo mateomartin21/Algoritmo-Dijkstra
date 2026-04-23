@@ -8,6 +8,7 @@ import java.awt.Color;
 import javax.swing.JFrame;
 public class VentanaPrincipal extends JFrame {
     public VentanaPrincipal(){
+
         this.setTitle("DIJKSTRA"); //Titulo
         this.setSize(800, 600); //tamaño ventana
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); //Que el programa termine al cerrar
@@ -23,21 +24,37 @@ public class VentanaPrincipal extends JFrame {
         this.add(lienzo, java.awt.BorderLayout.CENTER);
 
     
+        //panel para poner varios botones
+        javax.swing.JPanel panelBotones = new javax.swing.JPanel();
+        panelBotones.setBackground(Color.BLACK);
+
         //Nuevo botón
         javax.swing.JButton btnModo = new javax.swing.JButton("Jugar ");
-        btnModo.setBackground(Color.DARK_GRAY);
-        btnModo.setForeground(Color.WHITE);
-
         btnModo.addActionListener(e -> {
             lienzo.cambiarModo();
             if (lienzo.isModoEdicion()){
                 btnModo.setText("Jugar");
             } else {
                 btnModo.setText("Editar Mapa");
+            }
+            });
 
+        //boton IA
+        javax.swing.JButton btnIA = new javax.swing.JButton("Terminar para correr IA ");
+        btnIA.setBackground(Color.RED);
+        btnIA.setForeground(Color.WHITE); // (Opcional, para que la letra se vea mejor)
+        btnIA.addActionListener(e -> {
+            // Solo dejamos que corra la IA si YA estamos en modo juego
+            if (!lienzo.isModoEdicion()) {
+                lienzo.iniciarCarreraIA(); 
             }
         });
-        this.add(btnModo, java.awt.BorderLayout.SOUTH);
+
+        panelBotones.add(btnModo);
+        panelBotones.add(btnIA);
+        this.add(panelBotones, java.awt.BorderLayout.SOUTH);
+
+        
 
     }   
     

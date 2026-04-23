@@ -10,15 +10,24 @@ import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.lang.annotation.Repeatable;
+import javax.swing.Timer;
 
 public class PanelJuego extends JPanel{
     private Grafos grafo; //aqui guardamos la logica del juego
     private char letraSiguienteNodo = 'A'; //para que se nombren automaticamente
     private Nodo nodoSeleccionado = null; //para saber que nodo se tocó primero al unir
-
+    private String mensajePantalla = "Modo Edicion: Haz clic para crear o unir nodos." ;
+    private double costoPersona = 0.0;
     private boolean modoEdicion = true;
     private Nodo nodoJugador = null;
+    private Nodo nodoInicial = null; //para recordar donde empezó la carrera
+
+    //variables para IA
+    private Nodo nodoIA = null;
+    private double costoIA = 0.0;
+    private java.util.List<Nodo> rutaIA = null;
+    private int pasoAnimacionIA = 0;
+
 
     public PanelJuego(Grafos grafo){
         this.grafo = grafo;
@@ -58,17 +67,22 @@ public class PanelJuego extends JPanel{
                     if(nodoJugador == null){
                         //primer clic el usuario elige donde empezar
                         nodoJugador = nodoClickeado;
-                        System.out.println("Iniciaste en el nodo: " + nodoJugador.getId());
-                    } else{
+                        nodoInicial =nodoClickeado;
+                        costoPersona = 0.0;
+                        mensajePantalla = "Iniciaste en el nodo: " + nodoJugador.getId() + ". ¡Elige tu siguiente paso!";
+                    } else {
                         if (nodoJugador.tieneConexionCon(nodoClickeado)){
                             //se cumple la validacion
+                            double costoDelPaso = nodoJugador.obtenerCostoHacia(nodoClickeado);
+                            costoPersona = costoDelPaso + costoPersona;
+
                             nodoJugador = nodoClickeado;
-                            System.out.println("Te moviste al nodo: " + nodoJugador.getId());
+                            mensajePantalla = "Te moviste al nodo: " + nodoJugador.getId()+ " (Costo: +" + costoDelPaso + ")";
                         } else {
                             //falla la validacion
-                            System.out.println("¡Movimiento invalido! No puedes saltar hasta ahi.");
+                            mensajePantalla = "¡Movimiento invalido! No puedes saltar hasta ahi." + nodoClickeado.getId();
                         }
-                    }
+                    } 
                 }
             }
                 repaint(); //le dije a java que vuelva a dibujar todo el lienzo
@@ -150,6 +164,30 @@ public class PanelJuego extends JPanel{
         int radioJugador = 10; //mas chico que el nodo para que entre dentro
         g2d.fillOval(nodoJugador.getX()- radioJugador, nodoJugador.getY() -radioJugador, radioJugador*2, radioJugador*2);
     }
+
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new java.awt.Font("SansSerif", java.awt.Font.BOLD, 16));
+        g2d.drawString("Mensaje: " + mensajePantalla, 20, 30);
+
+        if (!modoEdicion) {
+            g2d.setColor(Color.ORANGE);
+            g2d.drawString("Costo Humano: " + costoPersona, 20, 60);
+        }
+
+        //dibujar datos de la IA
+        if (!modoEdicion ){
+        g2d.setColor(Color.PINK); //el jugador es de color verde
+        g2d.drawString ("Costo IA (Dijkstra): " + costoIA, 20, 90);
+    }
+        //dibujar la ficha de la IA (en rojo)
+        if (nodoIA != null){
+            g2d.setColor(Color.RED);
+            int radioIA = 8;
+            //lo digujamos un poco movido para que si el usuario y la IA esten en el mismo nodo entonces no se tapen las fichas
+            g2d.fillOval(nodoIA.getX()- radioIA, nodoIA.getY() -radioIA, radioIA*2, radioIA*2);
+        }
+
+
    
     
     }
@@ -164,7 +202,64 @@ public class PanelJuego extends JPanel{
         return this.modoEdicion;
     }
 
+    //Metodo que desata a la IA
+    public void iniciarCarreraIA(){
+    //VALIDAMOS QUE EL JUGADOR YA JUGÓ
+        if (nodoInicial == null || nodoJugador == null){
+            mensajePantalla = "¡Primero debes jugar tú y llegar a un destino!";
+            repaint();
+            return;
+        } 
+        // 1 -limpiamos datos viejos que del grafo antes de calcular
+        for (Nodo n : grafo.getTodosLosNodos()){
+            n.resetear();
+        }
+        //2 - ejecutamos el algoritmo desde donde empezaste
+        grafo.ejecutarDijkstra(nodoInicial.getId());
+
+        // 3 - le pedimos a Dikjstra la ruta perfecta hasta donde termine el usuario
+        rutaIA = grafo.obtenerRutaMasCorta(nodoJugador.getId());
+        if (rutaIA.isEmpty()){
+            mensajePantalla = "Dijkstra dice: No hay camino posible hacia allá.";
+            repaint();
+            return;
+        }
+        //Preparamos a la IA en la linea de salida
+        pasoAnimacionIA = 0;
+        costoIA = 0.0;
+        nodoIA = rutaIA.get(0);
+        mensajePantalla = "¡La IA está calculando y moviéndose!";
+
+        // 5 - Un timer que se ejecuta cada 1 segundo (1000 mls)
+        javax.swing.Timer timerAnimacion = new javax.swing.Timer(1000, e ->{
+            pasoAnimacionIA++; //avanzamos un paso a la lista
+            if (pasoAnimacionIA < rutaIA.size()){
+                //nos movemos al siguiente nodo
+                Nodo siguienteNodo = rutaIA.get(pasoAnimacionIA);
+                costoIA = costoIA + nodoIA.obtenerCostoHacia(siguienteNodo);
+                nodoIA = siguienteNodo;
+                repaint();
+            } else{
+                // ya llegó a la meta, obtenemos el Timer
+                ((javax.swing.Timer) e.getSource()).stop();
+
+                //Juzgamos quien ganó
+                if (costoIA < costoPersona){
+                    mensajePantalla = "¡GANA LA IA! Encontró una ruta más barata.";
+                }
+                else if (costoIA == costoPersona){
+                    mensajePantalla = "¡EMPATE! Encontraste la ruta perfecta.";
+                }
+                else{mensajePantalla = "¡GANASTE TÚ! (Aunque esto es matemáticamente imposible si Dijkstra está bien programado)";
+                }
+                repaint();
+            }
+        } );
+        timerAnimacion.start(); //inicia el cronometro
+
 }
+
+ }
 
 
 
