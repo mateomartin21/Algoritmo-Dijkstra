@@ -50,8 +50,21 @@ public class VentanaPrincipal extends JFrame {
             }
         });
 
+        // Boton para reiniciar
+        javax.swing.JButton btnReiniciar = new javax.swing.JButton("Reiniciar partida ");
+        btnReiniciar.setBackground(Color.DARK_GRAY);
+        btnReiniciar.setForeground(Color.WHITE); // (Opcional, para que la letra se vea mejor)
+        btnReiniciar.addActionListener(e -> {
+            // Solo dejamos que corra la IA si YA estamos en modo juego
+            if (!lienzo.isModoEdicion()) {
+                lienzo.reiniciarPartidad();
+            }
+        });
+
+
         panelBotones.add(btnModo);
         panelBotones.add(btnIA);
+         panelBotones.add(btnReiniciar);
         this.add(panelBotones, java.awt.BorderLayout.SOUTH);
 
         

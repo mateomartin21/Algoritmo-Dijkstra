@@ -49,10 +49,12 @@ public class PanelJuego extends JPanel{
                 } else {
                     //si ya habia uno seleccionado los conectamos
                     //simulamos un peso aleatorio para la arista del 1 al 15
+                    if (nodoSeleccionado != nodoClickeado && !nodoSeleccionado.tieneConexionCon(nodoClickeado)){
                     double pesoAleatorio = Math.floor(Math.random() * 15) + 1;
                     nodoSeleccionado.agregarArista(nodoClickeado, pesoAleatorio);  
                     //ruta bidireccional
                     nodoClickeado.agregarArista(nodoSeleccionado, pesoAleatorio);
+                    }
                     nodoSeleccionado = null;
                 }
             } else{
@@ -259,7 +261,30 @@ public class PanelJuego extends JPanel{
 
 }
 
+    public void reiniciarPartidad(){
+        // 1 - limpiar los datos de la IA en los nodos
+        if (grafo != null && grafo.getTodosLosNodos() != null){
+            for (Nodo n: grafo.getTodosLosNodos()){
+                n.resetear();
+            }
+        }
+        // 2 - Borramos el progreso del usuario
+        this.nodoJugador = null;
+        this.nodoInicial = null;
+        this.costoPersona = 0.0;
+
+        // 3 - borramos a la IA de la pantalla 
+
+        this.nodoIA = null;
+        this.costoIA = 0.0;
+        if (this.rutaIA != null){
+            this.rutaIA.clear();
+        }
+        }
+
  }
+
+
 
 
 
