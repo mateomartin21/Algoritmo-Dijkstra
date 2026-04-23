@@ -82,4 +82,7 @@ public class Grafos {
         
                 return ruta;
             }
+    public java.util.Collection<Nodo> getTodosLosNodos() {
+        return nodos.values(); // para devolver todos los nodos guardados en el HashMap
+    }
         }
